@@ -3,7 +3,7 @@ import struct
 import sys
 import os
 import ctypes as ct
-import sim.simConst
+from sim.simConst import *
 
 #load library
 libsimx = None
