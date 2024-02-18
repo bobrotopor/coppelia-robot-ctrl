@@ -1,5 +1,5 @@
-import sim.sim as sim
 import sys
+import sim
 
 
 def init_id():
@@ -24,7 +24,4 @@ def init_id():
 
 if __name__ == '__main__':
 
-    sim.simxFinish(-1)  # just in case, close all opened connections
     id = init_id()
-
-
