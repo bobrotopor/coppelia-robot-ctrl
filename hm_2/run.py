@@ -1,5 +1,5 @@
 import sys
-import sim
+import hm_2.sim as sim
 
 
 def init_id():
@@ -25,3 +25,4 @@ def init_id():
 if __name__ == '__main__':
 
     id = init_id()
+    print(id)
