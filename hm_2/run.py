@@ -1,52 +1,27 @@
-import sys
-import sim.sim as sim
+
+
+from hm_2.manipulator import Manipulator
+from hm_2.client_tools import init_client_id, get_coord_ids
 import numpy as np
 
 
-def init_client_id():
-    sim.simxFinish(-1)  # just in case, close all opened connections
-    client_id = sim.simxStart(
-        '127.0.0.1',
-        19999,
-        True,
-        True,
-        5000,
-        5,
-    )
-
-    if client_id != -1:  # check if client connection successful
-        print('Connected to remote API server')
-    else:
-        print('Connection not successful')
-        sys.exit('Could not connect')
-
-    return client_id
-
-
-
-def get_transform(dh_params: dict, ):
-    dh_params
-    d, a, thetta, alpha
-    return np.array([
-        [c(thetta), -c(alpha)*s(thetta), s(alpha)*s(thetta), a*c(thetta)],
-        [s(thetta), c(alpha)*c(thetta), -s(alpha)*c(thetta), a*s(thetta)],
-        [0, s(alpha), c(alpha), d],
-        [0, 0, 0, 1]
-    ])
-
+PI = np.pi
+DEG = PI / 180
+DH_PARAMS = (
+    {'a': 0.140, 'alpha': PI/2,  'd': 0.4485, 'theta': PI/2},
+    {'a': 0.640, 'alpha': 0,     'd': 0,      'theta': PI/2},
+    {'a': 0.160, 'alpha': PI/2,  'd': 0,      'theta': 0},
+    {'a': 0,     'alpha': PI/2,  'd': 1.078,  'theta': PI},
+    {'a': 0.101, 'alpha': 0,     'd': 0,      'theta': 0},
+)
 
 
 if __name__ == '__main__':
 
-    id = init_client_id()
-    print(f'id = {id}')
-    joints = get_q_ids(id)
+    client_id = init_client_id()
+    coord_ids = get_coord_ids(client_id)
+    crp_manipulator = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
-
-    poses_1 = get_q(client_id=id, j_ids=joints)
-
-    q = [0, 0, 0, 0, 0]
-    move(id, joints, q)
-    poses_2 = get_q(client_id=id, j_ids=joints)
+    crp_manipulator.move_to_target((2.57,1,-1,0,0))
 
     pass
