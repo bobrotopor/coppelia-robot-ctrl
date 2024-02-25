@@ -3,13 +3,14 @@ from hm_2.client_tools import get_curr_coords, move
 
 class Manipulator:
 
-    def __init__(self, dh_params, client_id, coord_ids):
+    def __init__(self, dh_params: tuple[dict], client_id, coord_ids):
         self.dh_params = dh_params
         self.client_id = client_id
         self.coord_ids = coord_ids
+        self.curr_coords = None
 
     def upd_curr_coords(self):
-        self.coord_ids = get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
+        self.curr_coords = get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
 
     def move_to_target(self, target: tuple):
         """Установить координаты манипулятора в CoppeliaSim по заданным значениям."""
