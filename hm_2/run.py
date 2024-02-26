@@ -1,4 +1,4 @@
-
+"""Запуск моделирования манипулятора CRP-RA27-80."""
 
 from hm_2.manipulator import Manipulator
 from hm_2.client_tools import init_client_id, get_coord_ids
@@ -20,8 +20,9 @@ if __name__ == '__main__':
 
     client_id = init_client_id()
     coord_ids = get_coord_ids(client_id)
-    crp_manipulator = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
+    crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
-    crp_manipulator.move_to_target((2.57,1,-1,0,0))
-
-    pass
+    #crp_manipulator.move_to_target((2.57, 1, -1, 0, 0))
+    # for idx in range(crp_ra.coord_num):
+    #     print(f'А{idx}:\n')
+    #     print(crp_ra.trans_from_coord_num(idx))

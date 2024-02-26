@@ -1,12 +1,22 @@
+"""Класс манипулятора."""
+
+import numpy as np
+from scipy.optimize import minimize
+from scipy.spatial.transform import Rotation as R
+
+
 from hm_2.client_tools import get_curr_coords, move
+from math import sin, cos
 
 
 class Manipulator:
+    """Манипулятор."""
 
     def __init__(self, dh_params: tuple[dict], client_id, coord_ids):
         self.dh_params = dh_params
         self.client_id = client_id
         self.coord_ids = coord_ids
+        self.coord_num = len(dh_params)
         self.curr_coords = None
 
     def upd_curr_coords(self):
@@ -16,7 +26,20 @@ class Manipulator:
         """Установить координаты манипулятора в CoppeliaSim по заданным значениям."""
         move(client_id=self.client_id, coord_ids=self.coord_ids, q=target)
 
-    # # Define function of FK
+    def trans_from_coord_num(self, coord_num: int):
+
+        a = self.dh_params[coord_num]['a']
+        alpha = self.dh_params[coord_num]['alpha']
+        d = self.dh_params[coord_num]['d']
+        theta = self.dh_params[coord_num]['theta']
+
+        return np.array([
+            [cos(theta), -cos(alpha)*sin(theta), sin(alpha)*sin(theta), a*cos(theta)],
+            [sin(theta), cos(alpha)*cos(theta), -sin(alpha)*cos(theta), a*sin(theta)],
+            [0, sin(alpha), cos(alpha), d],
+            [0, 0, 0, 1]
+        ])
+    #
     # def forward_kinematics(self, joint_coord):
     #     DH = self.dh_params_arr.copy()
     #     self.joints_val = np.array(joint_coord)
@@ -49,15 +72,3 @@ class Manipulator:
     #     result = minimize(err_cb, self.joints_val, method='BFGS', options={'eps': 10e-7})
     #     return result.x
     #
-
-#
-# def get_transform(dh_params: dict, ):
-#     dh_params
-#     d, a, thetta, alpha
-#     return np.array([
-#         [c(thetta), -c(alpha)*s(thetta), s(alpha)*s(thetta), a*c(thetta)],
-#         [s(thetta), c(alpha)*c(thetta), -s(alpha)*c(thetta), a*s(thetta)],
-#         [0, s(alpha), c(alpha), d],
-#         [0, 0, 0, 1]
-#     ])
-#
