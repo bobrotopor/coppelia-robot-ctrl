@@ -2,6 +2,8 @@ import sys
 import sim.sim as sim
 import numpy as np
 
+from numpy.typing import NDArray
+
 
 def init_client_id():
     sim.simxFinish(-1)  # just in case, close all opened connections
@@ -23,9 +25,9 @@ def init_client_id():
     return client_id
 
 
-def get_coord_ids(client_id):
+def get_coord_ids(client_id) -> list:
     """Получить список id обобщённых координат манипулятора."""
-    coord_ids = np.array([0, 0, 0, 0, 0])
+    coord_ids = [0, 0, 0, 0, 0]
     err, coord_ids[0] = sim.simxGetObjectHandle(client_id, 'j_1', sim.simx_opmode_oneshot_wait)
     err, coord_ids[1] = sim.simxGetObjectHandle(client_id, 'j_2', sim.simx_opmode_oneshot_wait)
     err, coord_ids[2] = sim.simxGetObjectHandle(client_id, 'j_3', sim.simx_opmode_oneshot_wait)
@@ -34,7 +36,7 @@ def get_coord_ids(client_id):
     return coord_ids
 
 
-def get_curr_coords(client_id, coord_ids):
+def get_curr_coords(client_id, coord_ids) -> NDArray:
     """Получить список текущих значений обобщённых координат манипулятора."""
     coords = np.zeros(5)
     error, coords[0] = sim.simxGetJointPosition(client_id, coord_ids[0], sim.simx_opmode_oneshot_wait)
@@ -45,7 +47,7 @@ def get_curr_coords(client_id, coord_ids):
     return coords
 
 
-def move(client_id, coord_ids, q):
+def move(client_id, coord_ids, q) -> None:
     error = sim.simxSetJointTargetPosition(client_id, coord_ids[0], q[0], sim.simx_opmode_streaming)
     error = sim.simxSetJointTargetPosition(client_id, coord_ids[1], q[1], sim.simx_opmode_streaming)
     error = sim.simxSetJointTargetPosition(client_id, coord_ids[2], q[2], sim.simx_opmode_streaming)

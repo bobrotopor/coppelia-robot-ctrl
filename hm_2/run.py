@@ -23,6 +23,10 @@ if __name__ == '__main__':
     crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
     #crp_manipulator.move_to_target((2.57, 1, -1, 0, 0))
+
     # for idx in range(crp_ra.coord_num):
     #     print(f'А{idx}:\n')
     #     print(crp_ra.trans_from_coord_num(idx))
+
+    print(crp_ra.clamp_tf)
+    print(crp_ra.clamp_tf @ np.array([0, 0, 0, 1]))
