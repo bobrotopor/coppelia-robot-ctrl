@@ -41,10 +41,12 @@ class Manipulator:
 
     def trans_from_coord_num(self, coord_num: int):
         """Получить матрицу перехода T_i от i до i+1 СК."""
+
         a = self.dh_params[coord_num]['a']
         alpha = self.dh_params[coord_num]['alpha']
         d = self.dh_params[coord_num]['d']
-        theta = self.dh_params[coord_num]['theta']
+        #theta = self.dh_params[coord_num]['theta']
+        theta = self.dh_params[coord_num]['theta'] + self.curr_coords[coord_num]
 
         return np.array([
             [cos(theta), -cos(alpha)*sin(theta), sin(alpha)*sin(theta), a*cos(theta)],

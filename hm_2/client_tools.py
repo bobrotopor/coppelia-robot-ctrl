@@ -36,7 +36,7 @@ def get_coord_ids(client_id) -> list:
     return coord_ids
 
 
-def get_curr_coords(client_id, coord_ids) -> NDArray:
+def get_curr_coords(client_id, coord_ids: list) -> NDArray:
     """Получить список текущих значений обобщённых координат манипулятора."""
     coords = np.zeros(5)
     error, coords[0] = sim.simxGetJointPosition(client_id, coord_ids[0], sim.simx_opmode_oneshot_wait)
