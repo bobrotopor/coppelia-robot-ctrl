@@ -1,6 +1,8 @@
 """Класс манипулятора."""
+import time
 
 import numpy as np
+from numpy.typing import NDArray
 from scipy.optimize import minimize
 from scipy.spatial.transform import Rotation
 
@@ -22,21 +24,23 @@ class Manipulator:
         self.clamp_tf = None            # матрица перехода от СК схвата до мировой СК
 
         self.upd_curr_coords()
-        self.upd_clamp_pose()
+        self.upd_clamp_tf()
 
     def upd_curr_coords(self):
         """Обновить текущие значения обобщённых координат из CoppeliaSim."""
         self.curr_coords = get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
 
-    def upd_clamp_pose(self):
+    def upd_clamp_tf(self):
         """Обновить текущее значение матрицы перехода от СК схвата до мировой СК."""
         self.clamp_tf = np.eye(4)
         for idx in range(self.coord_num):
             tf_i = self.trans_from_coord_num(idx)
             self.clamp_tf = self.clamp_tf.dot(tf_i)
 
-    def move_to_target(self, target: tuple):
-        """Установить координаты манипулятора в CoppeliaSim по заданным значениям."""
+    def move_by_coords(self, target: tuple):
+        """Переместить манипулятор в CoppeliaSim в соответсвтии с заданными значениями обобщенных координат.
+
+        :param target: [рад], целевой кортеж углов поворота обобщенных координат."""
         move(client_id=self.client_id, coord_ids=self.coord_ids, q=target)
 
     def trans_from_coord_num(self, coord_num: int):
@@ -55,7 +59,7 @@ class Manipulator:
             [0, 0, 0, 1]
         ])
 
-    def calc_pose_err(self, target_tf):
+    def calc_pose_err(self, target_tf) -> NDArray:
         # Extract position and rotation from current_pose
         curr_trans = self.clamp_tf[:3, 3]
         curr_rot = Rotation.from_matrix(self.clamp_tf[:3, :3])
@@ -75,6 +79,12 @@ class Manipulator:
         error = np.hstack((pose_err, rot_err))
         return error
 
+    def step(self, target_coords: tuple, delay_sec: float):
+        """Один шаг манипулятора - микропремещение."""
+        self.move_by_coords(target=target_coords)
+        time.sleep(delay_sec)
+        self.upd_curr_coords()
+        self.upd_clamp_tf()
 
     #
     # def forward_kinematics(self, joint_coord):

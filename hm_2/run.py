@@ -5,6 +5,7 @@ from hm_2.manipulator import Manipulator
 from hm_2.client_tools import init_client_id, get_coord_ids
 import numpy as np
 
+from hm_2.tests.test_coppelia_delay import testing_delay
 
 PI = np.pi
 DEG = PI / 180
@@ -23,19 +24,4 @@ if __name__ == '__main__':
     coord_ids = get_coord_ids(client_id)
     crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
-
-    print(f'before move {crp_ra.curr_coords}')
-
-    crp_ra.move_to_target((0, 0, 1, 0, 0))
-
-    # for idx in range(crp_ra.coord_num):
-    #     print(f'А{idx}:\n')
-    #     print(crp_ra.trans_from_coord_num(idx))
-
-    time.sleep(1)
-    crp_ra.upd_curr_coords()        # FIXME: !!!!
-    print(f'after move {crp_ra.curr_coords}')
-
-    print(crp_ra.clamp_tf)
-    print(crp_ra.clamp_tf @ np.array([0, 0, 0, 1]))
-    pass
+    testing_delay(manip=crp_ra, delay_sec=0.5)
