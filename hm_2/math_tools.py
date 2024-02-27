@@ -74,10 +74,10 @@ def get_circle_points_arr(circle_params: tuple, num: int) -> list[Point]:
         [0, 0, 1],
     ])
 
-    phi_arr = np.linspace(start=0, stop=2*np.pi, num=num)
-
+    phi_step = 2*np.pi / num
     circle_points = []
-    for phi in phi_arr:
+    for idx in range(num):
+        phi = idx * phi_step
         p = tf_2d @ np.array([r * np.cos(phi), r * np.sin(phi), 1])
         x = p[0]
         y = p[1]

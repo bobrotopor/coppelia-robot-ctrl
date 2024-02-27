@@ -34,6 +34,7 @@ def test_get_circle_points_arr():
 
     print(circle_points)
 
+
 if __name__ == '__main__':
 
     test_get_flat_circle_params()
