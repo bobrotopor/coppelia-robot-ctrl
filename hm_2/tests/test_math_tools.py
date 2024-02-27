@@ -32,7 +32,8 @@ def test_get_circle_points_arr():
         num=4,
     )
 
-    print(circle_points)
+    for point in circle_points:
+        print(f'x={point.x}, y={point.y}, z={point.z}')
 
 
 if __name__ == '__main__':
