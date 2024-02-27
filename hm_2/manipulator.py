@@ -1,5 +1,4 @@
 """Класс манипулятора."""
-import time
 
 import numpy as np
 from numpy.typing import NDArray
@@ -30,14 +29,15 @@ class Manipulator:
         """Обновить текущие значения обобщённых координат из CoppeliaSim."""
         self.curr_coords = get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
 
-    def upd_clamp_tf(self):
+    def upd_clamp_tf(self) -> NDArray:
         """Обновить текущее значение матрицы перехода от СК схвата до мировой СК."""
         self.clamp_tf = np.eye(4)
         for idx in range(self.coord_num):
             tf_i = self.trans_from_coord_num(idx)
             self.clamp_tf = self.clamp_tf.dot(tf_i)
+        return self.clamp_tf
 
-    def move_by_coords(self, target: tuple):
+    def move_by_coords(self, target: tuple | list):
         """Переместить манипулятор в CoppeliaSim в соответсвтии с заданными значениями обобщенных координат.
 
         :param target: [рад], целевой кортеж углов поворота обобщенных координат."""
@@ -79,43 +79,22 @@ class Manipulator:
         error = np.hstack((pose_err, rot_err))
         return error
 
-    def step(self, target_coords: tuple, delay_sec: float):
+    def solve_ik(self, target_tf):
+        """Решение ОЗК."""
+        # error function
+        def get_normed_err(): return np.linalg.norm(self.calc_pose_err(target_tf))
+
+        # Use BFGS method to minimize the err function
+        result = minimize(get_normed_err, self.curr_coords, method='BFGS', options={'eps': 10e-7})
+        return result.x
+
+    def step(self, target_tf: NDArray) -> NDArray:
         """Один шаг манипулятора - микропремещение."""
-        self.move_by_coords(target=target_coords)
-        time.sleep(delay_sec)
+        # TODO: !!!
+        # self.move_by_coords(target=target_coords)
+        # time.sleep(delay_sec)
         self.upd_curr_coords()
         self.upd_clamp_tf()
 
-    #
-    # def forward_kinematics(self, joint_coord):
-    #     DH = self.dh_params_arr.copy()
-    #     self.joints_val = np.array(joint_coord)
-    #     DH_Joints = []
-    #     for i in range(len(DH)):
-    #         temp = {}
-    #         x = DH[i]
-    #         temp['theta'] = x['theta'] + self.joints_val[i]
-    #         temp['alpha'] = x['alpha']
-    #         temp['d'] = x['d']
-    #         temp['a'] = x['a']
-    #         DH_Joints.append(temp)
-    #
-    #     # transformation_matrices = [comp_trans_matrix(**params) for params in DH_Joints]
-    #     transformation_matrices = [comp_trans_matrix(DH) for DH in DH_Joints]
-    #     # Multiply all transformation matrices together
-    #     final = np.eye(4)
-    #     for T in transformation_matrices:
-    #         final = final.dot(T)
-    #
-    #     return final
-    #
-    # def solveIK(self, target_mat):
-    #     # error function
-    #     def err_cb(joint_angles):
-    #         curPose = self.forward_kinematics(joint_angles)
-    #         return np.linalg.norm(error_pos(curPose, target_mat))
-    #
-    #     # Use BFGS method to minimize the err function
-    #     result = minimize(err_cb, self.joints_val, method='BFGS', options={'eps': 10e-7})
-    #     return result.x
-    #
+        return self.solve_ik(target_tf)
+

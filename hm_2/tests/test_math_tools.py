@@ -1,4 +1,4 @@
-from hm_2.math_tools import get_flat_circle_params, get_circle_points_arr, Point
+from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, Point
 
 
 def test_get_flat_circle_params():
@@ -27,7 +27,7 @@ def test_get_circle_points_arr():
     b = Point(1, 0, 0)
     c = Point(2, 1, 0)
 
-    circle_points = get_circle_points_arr(
+    circle_points = points_from_circle_params(
         circle_params=get_flat_circle_params(a, b, c),
         num=4,
     )

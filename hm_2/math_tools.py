@@ -26,14 +26,15 @@ def rot_z(theta: float):
     ])
 
 
-def xyz_to_pose(x: float, y: float, z: float, phi: float, theta: float, psi: float):
-    pose = np.eye(4)
-    rot = rot_z(psi) @ rot_y(theta) @ rot_x(phi)
-    pose[:3, :3] = rot
-    pose[0, 3] = x
-    pose[1, 3] = y
-    pose[2, 3] = z
-    return pose
+def tf_from_orientation(x: float, y: float, z: float, phi_x: float, theta_y: float, psi_z: float):
+    """Получить матрицу перехода по ориентации твердого тела в пространсвте - 6 координат."""
+    tf = np.eye(4)
+    rot = rot_z(psi_z) @ rot_y(theta_y) @ rot_x(phi_x)
+    tf[:3, :3] = rot
+    tf[0, 3] = x
+    tf[1, 3] = y
+    tf[2, 3] = z
+    return tf
 
 
 class Point(object):
@@ -61,8 +62,8 @@ def get_flat_circle_params(a: Point, b: Point, c: Point) -> tuple[float]:
     return (center_x, center_y, z, r)
 
 
-def get_circle_points_arr(circle_params: tuple, num: int) -> list[Point]:
-
+def points_from_circle_params(circle_params: tuple, num: int) -> list[Point]:
+    """Получить """
     center_x = circle_params[0]
     center_y = circle_params[1]
     z = circle_params[2]
