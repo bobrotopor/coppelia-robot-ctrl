@@ -19,38 +19,38 @@ class Manipulator:
         self.coord_ids = coord_ids
         self.coord_num = len(dh_params)
 
-        self.curr_coords = None         # текущие значения обобщённых координат
-        self.clamp_tf = None            # матрица перехода от СК схвата до мировой СК
+        # текущие значения обобщённых координат
+        self.curr_coords = self.calc_curr_coords()
+        # матрица перехода от СК схвата до мировой СК
+        self.clamp_tf = self.calc_clamp_tf
 
-        self.upd_curr_coords()
-        self.upd_clamp_tf()
 
-    def upd_curr_coords(self):
+    def calc_curr_coords(self) -> NDArray:
         """Обновить текущие значения обобщённых координат из CoppeliaSim."""
-        self.curr_coords = get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
+        return get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
 
-    def upd_clamp_tf(self) -> NDArray:
+    def calc_clamp_tf(self, curr_coords: NDArray) -> NDArray:
         """Обновить текущее значение матрицы перехода от СК схвата до мировой СК."""
-        self.clamp_tf = np.eye(4)
+        clamp_tf = np.eye(4)
         for idx in range(self.coord_num):
-            tf_i = self.trans_from_coord_num(idx)
-            self.clamp_tf = self.clamp_tf.dot(tf_i)
-        return self.clamp_tf
+            tf_i = self.trans_from_coord_num(curr_coords=curr_coords, coord_num=idx)
+            clamp_tf = clamp_tf.dot(tf_i)
+        return clamp_tf
 
-    def move_by_coords(self, target: tuple | list):
-        """Переместить манипулятор в CoppeliaSim в соответсвтии с заданными значениями обобщенных координат.
+    def move_by_coords(self, target_coords: tuple | list):
+        """Переместить манипулятор в CoppeliaSim в соответсвтии с
+        заданными значениями обобщенных координат.
 
-        :param target: [рад], целевой кортеж углов поворота обобщенных координат."""
-        move(client_id=self.client_id, coord_ids=self.coord_ids, q=target)
+        :param target_coords: [рад], целевой кортеж углов поворота обобщенных координат."""
+        move(client_id=self.client_id, coord_ids=self.coord_ids, q=target_coords)
 
-    def trans_from_coord_num(self, coord_num: int):
+    def trans_from_coord_num(self, curr_coords: NDArray, coord_num: int):
         """Получить матрицу перехода T_i от i до i+1 СК."""
 
         a = self.dh_params[coord_num]['a']
         alpha = self.dh_params[coord_num]['alpha']
         d = self.dh_params[coord_num]['d']
-        #theta = self.dh_params[coord_num]['theta']
-        theta = self.dh_params[coord_num]['theta'] + self.curr_coords[coord_num]
+        theta = self.dh_params[coord_num]['theta'] + curr_coords[coord_num]
 
         return np.array([
             [cos(theta), -cos(alpha)*sin(theta), sin(alpha)*sin(theta), a*cos(theta)],
@@ -82,19 +82,21 @@ class Manipulator:
     def solve_ik(self, target_tf):
         """Решение ОЗК."""
         # error function
-        def get_normed_err(): return np.linalg.norm(self.calc_pose_err(target_tf))
+        def get_normed_err(curr_coords: NDArray):
+            self.clamp_tf = self.calc_clamp_tf(curr_coords)
+            return np.linalg.norm(self.calc_pose_err(target_tf))
 
         # Use BFGS method to minimize the err function
         result = minimize(get_normed_err, self.curr_coords, method='BFGS', options={'eps': 10e-7})
         return result.x
 
-    def step(self, target_tf: NDArray) -> NDArray:
-        """Один шаг манипулятора - микропремещение."""
-        # TODO: !!!
-        # self.move_by_coords(target=target_coords)
-        # time.sleep(delay_sec)
-        self.upd_curr_coords()
-        self.upd_clamp_tf()
-
-        return self.solve_ik(target_tf)
+    # def step(self, target_tf: NDArray) -> NDArray:
+    #     """Один шаг манипулятора - микропремещение."""
+    #     # TODO: !!!
+    #     # self.move_by_coords(target=target_coords)
+    #     # time.sleep(delay_sec)
+    #     self.calc_curr_coords()
+    #     self.calc_clamp_tf()
+    #
+    #     return self.solve_ik(target_tf)
 

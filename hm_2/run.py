@@ -31,7 +31,7 @@ if __name__ == '__main__':
     c = Point(0.45, 0.45, 0.8)
 
     circle_params = get_flat_circle_params(a, b, c)
-    points = points_from_circle_params(circle_params, 50)
+    points = points_from_circle_params(circle_params, 100)
 
     coords_history = []
     for p in points:
