@@ -1,6 +1,6 @@
-import numpy as np
-from scipy.spatial.transform import Rotation
+"""Модуль математики."""
 
+import numpy as np
 
 def rot_x(theta: float):
     return np.array([
@@ -62,7 +62,7 @@ def get_flat_circle_params(a: Point, b: Point, c: Point) -> tuple[float]:
     return (center_x, center_y, z, r)
 
 
-def points_from_circle_params(circle_params: tuple, num: int) -> list[Point]:
+def points_from_circle_params(circle_params: tuple, num: int, start_from: float = 0) -> list[Point]:
     """Получить """
     center_x = circle_params[0]
     center_y = circle_params[1]
@@ -78,7 +78,7 @@ def points_from_circle_params(circle_params: tuple, num: int) -> list[Point]:
     phi_step = 2*np.pi / num
     circle_points = []
     for idx in range(num):
-        phi = idx * phi_step
+        phi = idx * phi_step + start_from
         p = tf_2d @ np.array([r * np.cos(phi), r * np.sin(phi), 1])
         x = p[0]
         y = p[1]

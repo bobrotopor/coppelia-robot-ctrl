@@ -89,14 +89,3 @@ class Manipulator:
         # Use BFGS method to minimize the err function
         result = minimize(get_normed_err, self.curr_coords, method='BFGS', options={'eps': 10e-7})
         return result.x
-
-    # def step(self, target_tf: NDArray) -> NDArray:
-    #     """Один шаг манипулятора - микропремещение."""
-    #     # TODO: !!!
-    #     # self.move_by_coords(target=target_coords)
-    #     # time.sleep(delay_sec)
-    #     self.calc_curr_coords()
-    #     self.calc_clamp_tf()
-    #
-    #     return self.solve_ik(target_tf)
-
