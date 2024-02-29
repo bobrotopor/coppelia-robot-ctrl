@@ -19,6 +19,25 @@ DH_PARAMS = (
 )
 
 
+def is_points_reachable(points: list[Point]) -> bool:
+    """Достижимы ли манипулятором заданные точки."""
+    r_max = 1.865
+    r_min = 0.395
+    for p in points:
+        p_radius = np.sqrt(p.x**2 + p.y**2 + p.z**2)
+        if p_radius < r_min:
+            raise Exception(
+                'Одна из точек траектории имеет радиус-вектор меньший '
+                'чем минимальный радиус достижимости!'
+            )
+        if p_radius > r_max:
+            raise Exception(
+                'Одна из точек траектории имеет радиус-вектор больший '
+                'чем максимальный радиус достижимости!'
+            )
+    return True
+
+
 if __name__ == '__main__':
 
     client_id = init_client_id()
@@ -26,8 +45,8 @@ if __name__ == '__main__':
     crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
     a = Point(0.0,  1.6, 0.8)
-    b = Point(0.6,  0.9, 0.8)
-    c = Point(-0.6, 0.9,0.8)
+    b = Point(0.2,  1.3, 0.8)
+    c = Point(-0.2, 1.3, 0.8)
 
     circle_params = get_flat_circle_params(a, b, c)
     points = points_from_circle_params(
@@ -36,10 +55,7 @@ if __name__ == '__main__':
         start_from=90 * DEG,
     )
 
-    crp_ra_max_len = 0.4485 + 0.640 + 1.078 + 0.101
-    for p in points:
-        if np.sqrt(p.x**2 + p.y**2 + p.z**2) > crp_ra_max_len:
-            raise Exception('Одна из точек окружности находится вне рабочей зоны манипулятора!')
+    is_points_reachable(points)
 
     coords_history = []
     for p in points:
