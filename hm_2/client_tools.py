@@ -25,6 +25,17 @@ def init_client_id():
     return client_id
 
 
+def get_object_id(client_id, object_name: str):
+    """Получить id объекта в копеллии."""
+    err, obj_id = sim.simxGetObjectHandle(client_id, object_name, sim.simx_opmode_oneshot_wait)
+    return obj_id
+
+
+def get_object_coords(client_id, obj_id) -> NDArray:
+    error, coords = sim.simxGetObjectPosition(client_id, obj_id, -1, sim.simx_opmode_oneshot_wait)
+    return coords
+
+
 def get_coord_ids(client_id) -> list:
     """Получить список id обобщённых координат манипулятора."""
     coord_ids = [0, 0, 0, 0, 0]

@@ -3,7 +3,7 @@
 import time
 
 from hm_2.manipulator import Manipulator
-from hm_2.client_tools import init_client_id, get_coord_ids
+from hm_2.client_tools import *
 import numpy as np
 from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, points_from_line_segment, \
     tf_from_orientation
@@ -24,18 +24,20 @@ R_MAX = 1.865
 R_MIN = 0.395
 
 
-def is_points_reachable(points: list[NDArray]) -> bool:
+def is_points_reachable(points: list[NDArray], points_seq_name: str = '') -> bool:
     """Достижимы ли манипулятором заданные точки."""
 
     for p in points:
         p_radius = np.sqrt(sum(p**2))
         if p_radius < R_MIN:
             raise Exception(
+                f'{points_seq_name }'
                 'Одна из точек траектории имеет радиус-вектор меньший '
                 'чем минимальный радиус достижимости!'
             )
         if p_radius > R_MAX:
             raise Exception(
+                f'{points_seq_name}'
                 'Одна из точек траектории имеет радиус-вектор больший '
                 'чем максимальный радиус достижимости!'
             )
@@ -46,18 +48,26 @@ if __name__ == '__main__':
 
     client_id = init_client_id()
     coord_ids = get_coord_ids(client_id)
-    crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
+    cube_id = get_object_id(client_id, 'cube')
 
-    step = 1e-2
-    z = 0.05
-    a = np.array([0.0,  1.6, z])
-    b = np.array([0.2,  1.3, z])
-    c = np.array([-0.2, 1.3, z])
+    crp_ra = Manipulator(
+        client_id=client_id,
+        coord_ids=coord_ids,
+        dh_params=DH_PARAMS,
+        BFGS_accuracy=1e-6,
+    )
+
+    init_cube_pose = get_object_coords(client_id, cube_id)
+    step = 4e-2
+    z = 0.1
+    a = np.array([ init_cube_pose[0],   init_cube_pose[1], z])
+    b = np.array([-init_cube_pose[0],   init_cube_pose[1], z])
+    c = np.array([-init_cube_pose[0],  -init_cube_pose[1], z])
 
     circle_params = get_flat_circle_params(a, b, c)
     circle_points = points_from_circle_params(
         circle_params=circle_params,
-        num=80,
+        num=120,
         start_from=90 * DEG,
     )
     is_points_reachable(circle_points)
@@ -68,7 +78,7 @@ if __name__ == '__main__':
     line_points = points_from_line_segment(p_start=p_home, p_end=p_start_circle, step=step)
     is_points_reachable(line_points)
     # print(line_points)
-    points_seq = line_points #+ circle_points
+    points_seq = line_points + circle_points
 
     # расчет положениий
     coords_history = []

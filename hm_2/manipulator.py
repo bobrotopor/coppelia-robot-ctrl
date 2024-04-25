@@ -13,7 +13,7 @@ from math import sin, cos
 class Manipulator:
     """Манипулятор."""
 
-    def __init__(self, dh_params: tuple[dict], client_id, coord_ids):
+    def __init__(self, dh_params: tuple[dict], client_id, coord_ids, BFGS_accuracy: float = 1e-7):
         self.dh_params = dh_params
         self.client_id = client_id
         self.coord_ids = coord_ids
@@ -22,13 +22,17 @@ class Manipulator:
         # текущие значения обобщённых координат
         self.curr_coords = None
         self.upd_curr_coords()
+        self.calced_coords = self.curr_coords
         # матрица перехода от текущего положения СК схвата до мировой СК
         self.clamp_tf = self.calc_clamp_tf(self.curr_coords)
+
+        self.BFGS_accuracy = BFGS_accuracy
 
 
     def upd_curr_coords(self) -> NDArray:
         """Обновить текущие значения обобщённых координат из CoppeliaSim."""
         self.curr_coords = get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
+        self.calced_coords = self.curr_coords
         return self.curr_coords
 
     def calc_clamp_tf(self, curr_coords: NDArray) -> NDArray:
@@ -86,14 +90,23 @@ class Manipulator:
         error = np.hstack((pose_err, rot_err))
         return error
 
-    def solve_ik(self, target_tf):
-        """Решение ОЗК."""
+    def solve_ik(self, target_tf) -> NDArray:
+        """Решение ОЗК.
+
+        Возвращает значения координат звеньев.
+        """
         # error function
-        self.upd_curr_coords()
         def get_normed_err(curr_coords: NDArray):
             self.clamp_tf = self.calc_clamp_tf(curr_coords)
             return np.linalg.norm(self.calc_pose_err(target_tf))
 
         # Use BFGS method to minimize the err function
-        result = minimize(get_normed_err, self.curr_coords, method='BFGS', options={'eps': 10e-7})
-        return result.x
+        result = minimize(
+            get_normed_err,
+            self.calced_coords,
+            method='BFGS',
+            options={'eps': self.BFGS_accuracy},
+        )
+        q = result.x
+        self.calced_coords = q
+        return q
