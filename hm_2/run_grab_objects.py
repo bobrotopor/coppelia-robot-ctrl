@@ -5,7 +5,9 @@ import time
 from hm_2.manipulator import Manipulator
 from hm_2.client_tools import init_client_id, get_coord_ids
 import numpy as np
-from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, tf_from_orientation, Point
+from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, tf_from_orientation
+from numpy.typing import NDArray
+
 
 PI = np.pi
 DEG = PI / 180
@@ -17,20 +19,21 @@ DH_PARAMS = (
     {'a': 0,     'alpha': PI/2,  'd': 1.078,  'theta': PI},
     {'a': 0.101, 'alpha': 0,     'd': 0,      'theta': 0},
 )
+R_MAX = 1.865
+R_MIN = 0.395
 
 
-def is_points_reachable(points: list[Point]) -> bool:
+def is_points_reachable(points: list[NDArray]) -> bool:
     """Достижимы ли манипулятором заданные точки."""
-    r_max = 1.865
-    r_min = 0.395
+
     for p in points:
-        p_radius = np.sqrt(p.x**2 + p.y**2 + p.z**2)
-        if p_radius < r_min:
+        p_radius = np.sqrt(sum(p**2))
+        if p_radius < R_MIN:
             raise Exception(
                 'Одна из точек траектории имеет радиус-вектор меньший '
                 'чем минимальный радиус достижимости!'
             )
-        if p_radius > r_max:
+        if p_radius > R_MAX:
             raise Exception(
                 'Одна из точек траектории имеет радиус-вектор больший '
                 'чем максимальный радиус достижимости!'
@@ -45,9 +48,9 @@ if __name__ == '__main__':
     crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
     z = 0.05
-    a = Point(0.0,  1.6, z)
-    b = Point(0.2,  1.3, z)
-    c = Point(-0.2, 1.3, z)
+    a = np.array([0.0,  1.6, z])
+    b = np.array([0.2,  1.3, z])
+    c = np.array([-0.2, 1.3, z])
 
     circle_params = get_flat_circle_params(a, b, c)
     points = points_from_circle_params(
@@ -61,10 +64,27 @@ if __name__ == '__main__':
     # расчет положениий
     coords_history = []
     for p in points:
-        target_tf = tf_from_orientation(p.x, p.y, p.z, 0, DEG*90, 0)
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
         coords_history.append(crp_ra.solve_ik(target_tf))
 
     # анимация
     for coords in coords_history:
         crp_ra.move_by_coords(coords)
         time.sleep(0.07)
+
+
+    # # расчет положениий
+    # coords_history = []
+    # for p in points:
+    #     target_tf = tf_from_orientation(p.x, p.y, p.z, 0, DEG*90, 0)
+    #     coords_history.append(crp_ra.solve_ik(target_tf))
+    #
+    # # анимация
+    # for coords in coords_history:
+    #     crp_ra.move_by_coords(coords)
+    #     time.sleep(0.07)
+    #
+    # z = 0.05
+    # a = Point(0.0,  1.6, z)
+    # b = Point(0.2,  1.3, z)
+    # c = Point(-0.2, 1.3, z)

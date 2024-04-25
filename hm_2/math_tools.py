@@ -1,6 +1,7 @@
 """Модуль математики."""
 
 import numpy as np
+from numpy.typing import NDArray
 
 
 def rot_x(theta: float):
@@ -38,32 +39,35 @@ def tf_from_orientation(x: float, y: float, z: float, phi_x: float, theta_y: flo
     return tf
 
 
-class Point(object):
-    def __init__(self, x: float, y: float, z: float):
-        self.x = x
-        self.y = y
-        self.z = z
+def get_flat_circle_params(a: NDArray, b: NDArray, c: NDArray) -> tuple[float]:
 
+    if len(a) !=3 or len(b) !=3 or len(c) !=3:
+        raise Exception('need 3 dim coords !')
 
-def get_flat_circle_params(a: Point, b: Point, c: Point) -> tuple[float]:
-
-    if a.z != b.z or a.z != c.z:
+    if a[2] != b[2] or a[2] != c[2]:
         raise Exception('z-coords must be equal for the circle !')
-    z = a.z
 
-    k1 = a.x**2 - b.x**2 + a.y**2 - b.y**2
-    k2 = a.x ** 2 - c.x ** 2 + a.y ** 2 - c.y ** 2
-    k3 = (a.x - b.x) / (a.x - c.x)
+    z = a[2]
+    x_a = a[0]
+    x_b = b[0]
+    x_c = c[0]
+    y_a = a[1]
+    y_b = b[1]
+    y_c = c[1]
 
-    center_y = 0.5 * (k1 - k2 * k3) / (a.y - b.y - k3 * (a.y - c.y))
-    center_x = 0.5 * (k2 - 2 * center_y * (a.y - c.y)) / (a.x - c.x)
+    k1 = x_a**2 - x_b**2 + y_a**2 - y_b**2          # k1 = a.x**2 - b.x**2 + a.y**2 - b.y**2
+    k2 = x_a ** 2 - x_c ** 2 + y_a ** 2 - y_c ** 2  # k2 = a.x ** 2 - c.x ** 2 + a.y ** 2 - c.y ** 2
+    k3 = (x_a - x_b) / (x_a - x_c)                  # k3 = (a.x - b.x) / (a.x - c.x)
 
-    r = np.sqrt((a.x - center_x)**2 + (a.y - center_y)**2)
+    center_y = 0.5 * (k1 - k2 * k3) / (y_a - y_b - k3 * (y_a - y_c))
+    center_x = 0.5 * (k2 - 2 * center_y * (y_a - y_c)) / (x_a - x_c)
+
+    r = np.sqrt((x_a - center_x)**2 + (y_a - center_y)**2)
 
     return (center_x, center_y, z, r)
 
 
-def points_from_circle_params(circle_params: tuple, num: int, start_from: float = 0) -> list[Point]:
+def points_from_circle_params(circle_params: tuple, num: int, start_from: float = 0) -> list[NDArray]:
     """Получить """
     center_x = circle_params[0]
     center_y = circle_params[1]
@@ -83,14 +87,16 @@ def points_from_circle_params(circle_params: tuple, num: int, start_from: float 
         p = tf_2d @ np.array([r * np.cos(phi), r * np.sin(phi), 1])
         x = p[0]
         y = p[1]
-        circle_points.append(Point(x, y, z))
+        circle_points.append(np.array([x, y, z]))
 
     return circle_points
 
 
-def points_from_line_segment(p_start: Point, p_end: Point, step: float):
+def points_from_line_segment(p_start: NDArray, p_end: NDArray, step: float):
     """Получить массив точек по отрезку прямой в пространстве."""
     # TODO: важно сделать так, что бы разбиение билось с длиной отрезка!
+    if len(p_start) !=3 or len(p_end) !=3:
+        raise Exception('need 3 dim coords !')
 
     # направляющий вектор
     vec = np.zeros(3)
