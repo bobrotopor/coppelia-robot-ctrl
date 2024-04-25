@@ -92,7 +92,7 @@ def points_from_circle_params(circle_params: tuple, num: int, start_from: float 
     return circle_points
 
 
-def points_from_line_segment(p_start: NDArray, p_end: NDArray, step: float) -> list[NDArray]:
+def points_from_line(p_start: NDArray, p_end: NDArray, step: float) -> list[NDArray]:
     """Получить массив точек по отрезку прямой в пространстве."""
     # TODO: важно сделать так, что бы разбиение билось с длиной отрезка!
     if len(p_start) !=3 or len(p_end) !=3:

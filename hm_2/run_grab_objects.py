@@ -5,7 +5,7 @@ import time
 from hm_2.manipulator import Manipulator
 from hm_2.client_tools import *
 import numpy as np
-from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, points_from_line_segment, \
+from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, points_from_line, \
     tf_from_orientation
 from numpy.typing import NDArray
 
@@ -44,6 +44,26 @@ def is_points_reachable(points: list[NDArray], points_seq_name: str = '') -> boo
     return True
 
 
+def get_traj_to_grab_object(start_pose, obj_pose, obj_height, step):
+    step_j = step
+    stop_z_coeff = 3
+    move_j_end = np.array([obj_pose[0], obj_pose[1], stop_z_coeff * obj_height])
+    move_j = points_from_line(p_start=start_pose, p_end=move_j_end, step=step_j)
+
+
+    move_l_to_obj = points_from_line(
+        p_start=move_j[-1],
+        p_end=np.array([move_j[-1][0], move_j[-1][1], cube_len]),
+        step=step,
+    )
+
+    move_l_with_obj = points_from_line(
+        p_start=np.array([move_j[-1][0], move_j[-1][1], cube_len]),
+        p_end=move_j[-1],
+        step=step,
+    )
+
+
 if __name__ == '__main__':
 
     client_id = init_client_id()
@@ -57,28 +77,33 @@ if __name__ == '__main__':
         BFGS_accuracy=1e-6,
     )
 
-    init_cube_pose = get_object_coords(client_id, cube_id)
-    step = 4e-2
-    z = 0.1
-    a = np.array([ init_cube_pose[0],   init_cube_pose[1], z])
-    b = np.array([-init_cube_pose[0],   init_cube_pose[1], z])
-    c = np.array([-init_cube_pose[0],  -init_cube_pose[1], z])
 
-    circle_params = get_flat_circle_params(a, b, c)
-    circle_points = points_from_circle_params(
-        circle_params=circle_params,
-        num=120,
-        start_from=90 * DEG,
-    )
-    is_points_reachable(circle_points)
+    init_cube_pose = get_object_coords(client_id, cube_id)
+    step = 1e-2
+    z = 0.1
+    z_with_obj = z * 5
+
+    cube_len = 0.1
 
     p_home = crp_ra.calc_clamp_xyz()
-    p_start_circle = a
 
-    line_points = points_from_line_segment(p_start=p_home, p_end=p_start_circle, step=step)
-    is_points_reachable(line_points)
-    # print(line_points)
-    points_seq = line_points + circle_points
+    l_to_cube = points_from_line(
+        p_start=p_home,
+        p_end=np.array([init_cube_pose[0], init_cube_pose[1], init_cube_pose[2] + cube_len/2]),
+        step=step,
+    )
+    last_pose = l_to_cube[-1]
+
+    l_up_with_cube = points_from_line(
+        p_start=last_pose,
+        p_end=np.array([last_pose[0], last_pose[1], last_pose[2] + z_with_obj]),
+        step=step,
+    )
+    is_points_reachable(l_to_cube, 'l_to_cube')
+    is_points_reachable(l_up_with_cube, 'l_up_with_cube')
+
+
+    points_seq = l_to_cube + l_up_with_cube
 
     # расчет положениий
     coords_history = []
@@ -89,4 +114,6 @@ if __name__ == '__main__':
     # анимация
     for coords in coords_history:
         crp_ra.move_by_coords(coords)
-        time.sleep(0.07)
+        time.sleep(0.05)
+
+
