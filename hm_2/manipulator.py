@@ -20,14 +20,16 @@ class Manipulator:
         self.coord_num = len(dh_params)
 
         # текущие значения обобщённых координат
-        self.curr_coords = self.calc_curr_coords()
-        # матрица перехода от СК схвата до мировой СК
-        self.clamp_tf = self.calc_clamp_tf
+        self.curr_coords = None
+        self.upd_curr_coords()
+        # матрица перехода от текущего положения СК схвата до мировой СК
+        self.clamp_tf = self.calc_clamp_tf(self.curr_coords)
 
 
-    def calc_curr_coords(self) -> NDArray:
+    def upd_curr_coords(self) -> NDArray:
         """Обновить текущие значения обобщённых координат из CoppeliaSim."""
-        return get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
+        self.curr_coords = get_curr_coords(client_id=self.client_id, coord_ids=self.coord_ids)
+        return self.curr_coords
 
     def calc_clamp_tf(self, curr_coords: NDArray) -> NDArray:
         """Обновить текущее значение матрицы перехода от СК схвата до мировой СК."""
@@ -36,6 +38,11 @@ class Manipulator:
             tf_i = self.trans_from_coord_num(curr_coords=curr_coords, coord_num=idx)
             clamp_tf = clamp_tf.dot(tf_i)
         return clamp_tf
+
+    def calc_clamp_xyz(self) -> NDArray:
+        self.upd_curr_coords()
+        clamp_tf = self.calc_clamp_tf(self.curr_coords)
+        return clamp_tf[:3, 3]
 
     def move_by_coords(self, target_coords: tuple | list):
         """Переместить манипулятор в CoppeliaSim в соответсвтии с
@@ -82,6 +89,7 @@ class Manipulator:
     def solve_ik(self, target_tf):
         """Решение ОЗК."""
         # error function
+        self.upd_curr_coords()
         def get_normed_err(curr_coords: NDArray):
             self.clamp_tf = self.calc_clamp_tf(curr_coords)
             return np.linalg.norm(self.calc_pose_err(target_tf))

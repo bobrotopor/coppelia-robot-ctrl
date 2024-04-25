@@ -22,7 +22,7 @@ def testing_delay(manip: Manipulator, delay_sec: float):
     manip.move_by_coords((1.57, 0, 0, 0, 0))
     time.sleep(delay_sec)
 
-    manip.calc_curr_coords()
+    manip.upd_curr_coords()
     manip.calc_clamp_tf()
     print(manip.clamp_tf)
     vec = manip.clamp_tf @ np.array([0, 0, 0, 1])
@@ -32,7 +32,7 @@ def testing_delay(manip: Manipulator, delay_sec: float):
     manip.move_by_coords((1.57, 0, 1.57, 0, 0))
     time.sleep(delay_sec)
 
-    manip.calc_curr_coords()
+    manip.upd_curr_coords()
     manip.calc_clamp_tf()
     print(manip.clamp_tf)
     vec = manip.clamp_tf @ np.array([0, 0, 0, 1])

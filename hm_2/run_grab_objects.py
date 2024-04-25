@@ -5,7 +5,8 @@ import time
 from hm_2.manipulator import Manipulator
 from hm_2.client_tools import init_client_id, get_coord_ids
 import numpy as np
-from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, tf_from_orientation
+from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, points_from_line_segment, \
+    tf_from_orientation
 from numpy.typing import NDArray
 
 
@@ -47,23 +48,31 @@ if __name__ == '__main__':
     coord_ids = get_coord_ids(client_id)
     crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
+    step = 1e-2
     z = 0.05
     a = np.array([0.0,  1.6, z])
     b = np.array([0.2,  1.3, z])
     c = np.array([-0.2, 1.3, z])
 
     circle_params = get_flat_circle_params(a, b, c)
-    points = points_from_circle_params(
+    circle_points = points_from_circle_params(
         circle_params=circle_params,
         num=80,
         start_from=90 * DEG,
     )
+    is_points_reachable(circle_points)
 
-    is_points_reachable(points)
+    p_home = crp_ra.calc_clamp_xyz()
+    p_start_circle = a
+
+    line_points = points_from_line_segment(p_start=p_home, p_end=p_start_circle, step=step)
+    is_points_reachable(line_points)
+    # print(line_points)
+    points_seq = line_points #+ circle_points
 
     # расчет положениий
     coords_history = []
-    for p in points:
+    for p in points_seq:
         target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
         coords_history.append(crp_ra.solve_ik(target_tf))
 
@@ -71,20 +80,3 @@ if __name__ == '__main__':
     for coords in coords_history:
         crp_ra.move_by_coords(coords)
         time.sleep(0.07)
-
-
-    # # расчет положениий
-    # coords_history = []
-    # for p in points:
-    #     target_tf = tf_from_orientation(p.x, p.y, p.z, 0, DEG*90, 0)
-    #     coords_history.append(crp_ra.solve_ik(target_tf))
-    #
-    # # анимация
-    # for coords in coords_history:
-    #     crp_ra.move_by_coords(coords)
-    #     time.sleep(0.07)
-    #
-    # z = 0.05
-    # a = Point(0.0,  1.6, z)
-    # b = Point(0.2,  1.3, z)
-    # c = Point(-0.2, 1.3, z)

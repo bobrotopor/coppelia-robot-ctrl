@@ -92,17 +92,26 @@ def points_from_circle_params(circle_params: tuple, num: int, start_from: float 
     return circle_points
 
 
-def points_from_line_segment(p_start: NDArray, p_end: NDArray, step: float):
+def points_from_line_segment(p_start: NDArray, p_end: NDArray, step: float) -> list[NDArray]:
     """Получить массив точек по отрезку прямой в пространстве."""
     # TODO: важно сделать так, что бы разбиение билось с длиной отрезка!
     if len(p_start) !=3 or len(p_end) !=3:
         raise Exception('need 3 dim coords !')
 
-    # направляющий вектор
-    vec = np.zeros(3)
-    vec[0] = p_end.x - p_start.x
-    vec[1] = p_end.y - p_start.y
-    vec[2] = p_end.z - p_start.z
-    # нормируем направляющий вектор
-    vec *= 1 / np.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
+    # создаем и нормируем направляющий вектор
+    dir_vec = p_end - p_start
+    len_dir_vec = np.sqrt(sum(dir_vec**2))
+    dir_vec *= 1 / len_dir_vec
+
+    num_points = int(np.ceil(len_dir_vec / step))
+    real_step = len_dir_vec / num_points
+
+    point = p_start
+    line_points = []
+    line_points.append(point)
+    for point_idx in range(num_points):
+        point = point + real_step * dir_vec
+        line_points.append(point)
+
+    return line_points
 
