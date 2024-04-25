@@ -13,14 +13,14 @@ PI = np.pi
 DEG = PI / 180
 
 DH_PARAMS = (
-    {'a': 0.140, 'alpha': PI/2,  'd': 0.4485, 'theta': PI/2},
-    {'a': 0.640, 'alpha': 0,     'd': 0,      'theta': PI/2},
-    {'a': 0.160, 'alpha': PI/2,  'd': 0,      'theta': 0},
-    {'a': 0,     'alpha': PI/2,  'd': 1.078,  'theta': PI},
-    {'a': 0.101, 'alpha': 0,     'd': 0,      'theta': 0},
+    {'a': 0, 'alpha': PI/2,  'd': 0.1519, 'theta': 0},
+    {'a': -0.24365, 'alpha': 0,     'd': 0,      'theta': 0},
+    {'a': -0.21325, 'alpha': 0,  'd': 0,      'theta': 0},
+    {'a': 0,     'alpha': PI/2,  'd': 0.11235,  'theta': 0},
+    {'a': 0, 'alpha': -PI/2,     'd': 0.0819,      'theta': 0},
 )
-R_MAX = 1.865
-R_MIN = 0.395
+R_MAX = 0.5
+R_MIN = 0.00
 
 
 def is_points_reachable(points: list[NDArray]) -> bool:

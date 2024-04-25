@@ -44,6 +44,7 @@ def get_coord_ids(client_id) -> list:
     err, coord_ids[2] = sim.simxGetObjectHandle(client_id, 'j_3', sim.simx_opmode_oneshot_wait)
     err, coord_ids[3] = sim.simxGetObjectHandle(client_id, 'j_4', sim.simx_opmode_oneshot_wait)
     err, coord_ids[4] = sim.simxGetObjectHandle(client_id, 'j_5', sim.simx_opmode_oneshot_wait)
+    err, coord_ids[5] = sim.simxGetObjectHandle(client_id, 'j_6', sim.simx_opmode_oneshot_wait)
     return coord_ids
 
 
@@ -55,6 +56,7 @@ def get_curr_coords(client_id, coord_ids: list) -> NDArray:
     error, coords[2] = sim.simxGetJointPosition(client_id, coord_ids[2], sim.simx_opmode_oneshot_wait)
     error, coords[3] = sim.simxGetJointPosition(client_id, coord_ids[3], sim.simx_opmode_oneshot_wait)
     error, coords[4] = sim.simxGetJointPosition(client_id, coord_ids[4], sim.simx_opmode_oneshot_wait)
+    error, coords[5] = sim.simxGetJointPosition(client_id, coord_ids[5], sim.simx_opmode_oneshot_wait)
     return coords
 
 
@@ -64,3 +66,4 @@ def move(client_id, coord_ids, q) -> None:
     error = sim.simxSetJointTargetPosition(client_id, coord_ids[2], q[2], sim.simx_opmode_streaming)
     error = sim.simxSetJointTargetPosition(client_id, coord_ids[3], q[3], sim.simx_opmode_streaming)
     error = sim.simxSetJointTargetPosition(client_id, coord_ids[4], q[4], sim.simx_opmode_streaming)
+    error = sim.simxSetJointTargetPosition(client_id, coord_ids[5], q[5], sim.simx_opmode_streaming)

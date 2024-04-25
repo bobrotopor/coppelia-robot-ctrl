@@ -13,14 +13,15 @@ PI = np.pi
 DEG = PI / 180
 
 DH_PARAMS = (
-    {'a': 0.140, 'alpha': PI/2,  'd': 0.4485, 'theta': PI/2},
-    {'a': 0.640, 'alpha': 0,     'd': 0,      'theta': PI/2},
-    {'a': 0.160, 'alpha': PI/2,  'd': 0,      'theta': 0},
-    {'a': 0,     'alpha': PI/2,  'd': 1.078,  'theta': PI},
-    {'a': 0.101, 'alpha': 0,     'd': 0,      'theta': 0},
+    {'a': 0, 'alpha': PI/2,  'd': 0.1519, 'theta': 0},
+    {'a': -0.24365, 'alpha': 0,     'd': 0,      'theta': 0},
+    {'a': -0.21325, 'alpha': 0,  'd': 0,      'theta': 0},
+    {'a': 0,     'alpha': PI/2,  'd': 0.11235,  'theta': 0},
+    {'a': 0, 'alpha': -PI/2,     'd': 0.08535,      'theta': 0},
+    {'a': 0, 'alpha': 0,     'd': 0.0819,      'theta': 0},
 )
-R_MAX = 1.865
-R_MIN = 0.395
+R_MAX = 100.0
+R_MIN = 0.00
 
 
 def is_points_reachable(points: list[NDArray], points_seq_name: str = '') -> bool:
@@ -56,7 +57,7 @@ def move_to_object_traj(start_pose, obj_pose, obj_height, step) -> list[NDArray]
     obj_pose[2] += obj_height
 
     step_j = step
-    stop_z_coeff = 10
+    stop_z_coeff = 1
     move_j_end = np.array([obj_pose[0], obj_pose[1], stop_z_coeff * obj_height])
     move_j = points_from_line(p_start=start_pose, p_end=move_j_end, step=step_j)
 
@@ -91,6 +92,7 @@ if __name__ == '__main__':
     cube_height = 0.1
 
     p_home = crp_ra.calc_clamp_xyz()
+    print(f'Начальная позиция обобщенных координат манипулятора {p_home}')
     to_object_traj = move_to_object_traj(
         start_pose=p_home, obj_pose=init_cube_pose, obj_height=cube_height, step=step)
 
@@ -117,19 +119,19 @@ if __name__ == '__main__':
     # расчет положениий движения к объекту
     to_object_traj_q_history = []
     for p in to_object_traj:
-        target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 90 * DEG, 0, 180 * DEG)
         to_object_traj_q_history.append(crp_ra.solve_ik(target_tf))
 
     # расчет положениий движения c захваченым объектом
     move_with_obj_q_history = []
     for p in move_l_with_obj:
-        target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 90 * DEG, 0, 180 * DEG)
         move_with_obj_q_history.append(crp_ra.solve_ik(target_tf))
 
     # расчет положениий движения в точку старта
     move_home_q_history = []
     for p in move_l_home:
-        target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 90 * DEG, 0, 180 * DEG)
         move_home_q_history.append(crp_ra.solve_ik(target_tf))
 
     for coords in to_object_traj_q_history:
