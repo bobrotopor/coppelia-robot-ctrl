@@ -5,10 +5,9 @@ import time
 from hm_2.manipulator import Manipulator
 from hm_2.client_tools import *
 import numpy as np
-from hm_2.math_tools import get_flat_circle_params, points_from_circle_params, points_from_line, \
-    tf_from_orientation
+from hm_2.math_tools import *
 from numpy.typing import NDArray
-
+import vacuum_clamp as vacuum
 
 PI = np.pi
 DEG = PI / 180
@@ -44,24 +43,33 @@ def is_points_reachable(points: list[NDArray], points_seq_name: str = '') -> boo
     return True
 
 
-def get_traj_to_grab_object(start_pose, obj_pose, obj_height, step):
+def get_target_tf(pose):
+    target_tf = tf_from_orientation(
+        pose[0], pose[1], pose[2], 0, DEG * 90, 0
+    )
+    return target_tf
+
+
+def move_to_object_traj(start_pose, obj_pose, obj_height, step) -> list[NDArray]:
+    # TODO: КОСТЫЛЬ!
+    obj_pose[0] -= 0.1
+    obj_pose[2] += obj_height
+
     step_j = step
-    stop_z_coeff = 3
+    stop_z_coeff = 10
     move_j_end = np.array([obj_pose[0], obj_pose[1], stop_z_coeff * obj_height])
     move_j = points_from_line(p_start=start_pose, p_end=move_j_end, step=step_j)
 
-
     move_l_to_obj = points_from_line(
         p_start=move_j[-1],
-        p_end=np.array([move_j[-1][0], move_j[-1][1], cube_len]),
+        p_end=np.array([move_j[-1][0], move_j[-1][1], obj_pose[2]]),
         step=step,
     )
 
-    move_l_with_obj = points_from_line(
-        p_start=np.array([move_j[-1][0], move_j[-1][1], cube_len]),
-        p_end=move_j[-1],
-        step=step,
-    )
+    is_points_reachable(move_j, 'move_j')
+    is_points_reachable(move_l_to_obj, 'move_l_to_obj')
+
+    return move_j + move_l_to_obj
 
 
 if __name__ == '__main__':
@@ -74,46 +82,68 @@ if __name__ == '__main__':
         client_id=client_id,
         coord_ids=coord_ids,
         dh_params=DH_PARAMS,
-        BFGS_accuracy=1e-6,
+        BFGS_accuracy=1e-7,
     )
-
 
     init_cube_pose = get_object_coords(client_id, cube_id)
-    step = 1e-2
-    z = 0.1
-    z_with_obj = z * 5
-
-    cube_len = 0.1
+    print(f'Начальная позиция кубика {init_cube_pose}')
+    step = 2e-2
+    cube_height = 0.1
 
     p_home = crp_ra.calc_clamp_xyz()
+    to_object_traj = move_to_object_traj(
+        start_pose=p_home, obj_pose=init_cube_pose, obj_height=cube_height, step=step)
 
-    l_to_cube = points_from_line(
-        p_start=p_home,
-        p_end=np.array([init_cube_pose[0], init_cube_pose[1], init_cube_pose[2] + cube_len/2]),
+    move_l_up = points_from_line(
+        p_start=to_object_traj[-1],
+        p_end=np.array([to_object_traj[-1][0], to_object_traj[-1][1], to_object_traj[-1][2] + cube_height*4]),
         step=step,
     )
-    last_pose = l_to_cube[-1]
 
-    l_up_with_cube = points_from_line(
-        p_start=last_pose,
-        p_end=np.array([last_pose[0], last_pose[1], last_pose[2] + z_with_obj]),
+    move_l_xy = points_from_line(
+        p_start=move_l_up[-1],
+        p_end=np.array([-move_l_up[-1][0], move_l_up[-1][1], move_l_up[-1][2]]),
         step=step,
     )
-    is_points_reachable(l_to_cube, 'l_to_cube')
-    is_points_reachable(l_up_with_cube, 'l_up_with_cube')
 
+    move_l_home = points_from_line(
+        p_start=move_l_xy[-1],
+        p_end=p_home,
+        step=step,
+    )
 
-    points_seq = l_to_cube + l_up_with_cube
+    move_l_with_obj = move_l_up + move_l_xy
 
-    # расчет положениий
-    coords_history = []
-    for p in points_seq:
+    # расчет положениий движения к объекту
+    to_object_traj_q_history = []
+    for p in to_object_traj:
         target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
-        coords_history.append(crp_ra.solve_ik(target_tf))
+        to_object_traj_q_history.append(crp_ra.solve_ik(target_tf))
 
-    # анимация
-    for coords in coords_history:
+    # расчет положениий движения c захваченым объектом
+    move_with_obj_q_history = []
+    for p in move_l_with_obj:
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
+        move_with_obj_q_history.append(crp_ra.solve_ik(target_tf))
+
+    # расчет положениий движения в точку старта
+    move_home_q_history = []
+    for p in move_l_home:
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 0, DEG*90, 0)
+        move_home_q_history.append(crp_ra.solve_ik(target_tf))
+
+    for coords in to_object_traj_q_history:
         crp_ra.move_by_coords(coords)
         time.sleep(0.05)
 
+    vacuum.grab_object(client_id, 'flange', 'cube', True)
 
+    for coords in move_with_obj_q_history:
+        crp_ra.move_by_coords(coords)
+        time.sleep(0.05)
+
+    vacuum.grab_object(client_id, 'flange', 'cube', False)
+
+    for coords in move_home_q_history:
+        crp_ra.move_by_coords(coords)
+        time.sleep(0.05)

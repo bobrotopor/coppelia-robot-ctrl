@@ -113,5 +113,6 @@ def points_from_line(p_start: NDArray, p_end: NDArray, step: float) -> list[NDAr
         point = point + real_step * dir_vec
         line_points.append(point)
 
+    print(f'last point {line_points[-1]}')
     return line_points
 
