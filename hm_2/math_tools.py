@@ -2,6 +2,7 @@
 
 import numpy as np
 
+
 def rot_x(theta: float):
     return np.array([
         [ 1,             0,              0],
@@ -85,3 +86,17 @@ def points_from_circle_params(circle_params: tuple, num: int, start_from: float 
         circle_points.append(Point(x, y, z))
 
     return circle_points
+
+
+def points_from_line_segment(p_start: Point, p_end: Point, step: float):
+    """Получить массив точек по отрезку прямой в пространстве."""
+    # TODO: важно сделать так, что бы разбиение билось с длиной отрезка!
+
+    # направляющий вектор
+    vec = np.zeros(3)
+    vec[0] = p_end.x - p_start.x
+    vec[1] = p_end.y - p_start.y
+    vec[2] = p_end.z - p_start.z
+    # нормируем направляющий вектор
+    vec *= 1 / np.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2)
+

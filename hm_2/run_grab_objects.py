@@ -44,9 +44,10 @@ if __name__ == '__main__':
     coord_ids = get_coord_ids(client_id)
     crp_ra = Manipulator(client_id=client_id, coord_ids=coord_ids, dh_params=DH_PARAMS)
 
-    a = Point(0.0,  1.6, 0.8)
-    b = Point(0.2,  1.3, 0.8)
-    c = Point(-0.2, 1.3, 0.8)
+    z = 0.05
+    a = Point(0.0,  1.6, z)
+    b = Point(0.2,  1.3, z)
+    c = Point(-0.2, 1.3, z)
 
     circle_params = get_flat_circle_params(a, b, c)
     points = points_from_circle_params(
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     # расчет положениий
     coords_history = []
     for p in points:
-        target_tf = tf_from_orientation(p.x, p.y, p.z, 0, 0, 0)
+        target_tf = tf_from_orientation(p.x, p.y, p.z, 0, DEG*90, 0)
         coords_history.append(crp_ra.solve_ik(target_tf))
 
     # анимация
