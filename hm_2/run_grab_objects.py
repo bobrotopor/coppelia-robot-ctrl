@@ -14,11 +14,11 @@ DEG = PI / 180
 
 DH_PARAMS = (
     {'a': 0, 'alpha': PI/2,  'd': 0.1519, 'theta': 0},
-    {'a': -0.24365, 'alpha': 0,     'd': 0,      'theta': 0},
-    {'a': -0.21325, 'alpha': 0,  'd': 0,      'theta': 0},
-    {'a': 0,     'alpha': PI/2,  'd': 0.11235,  'theta': 0},
+    {'a': 0.24365, 'alpha': 0,     'd': 0.120,      'theta': 0},
+    {'a': -0.21325, 'alpha': 0,  'd': -0.093,      'theta': 0},
+    {'a': 0,     'alpha': PI/2,  'd': 0.104,  'theta': 0},
     {'a': 0, 'alpha': -PI/2,     'd': 0.08535,      'theta': 0},
-    {'a': 0, 'alpha': 0,     'd': 0.0819,      'theta': 0},
+    {'a': 0, 'alpha': 0,     'd': 0.092,      'theta': 0},
 )
 R_MAX = 100.0
 R_MIN = 0.00
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
     init_cube_pose = get_object_coords(client_id, cube_id)
     print(f'Начальная позиция кубика {init_cube_pose}')
-    step = 2e-2
+    step = 5e-2
     cube_height = 0.1
 
     p_home = crp_ra.calc_clamp_xyz()
@@ -119,19 +119,19 @@ if __name__ == '__main__':
     # расчет положениий движения к объекту
     to_object_traj_q_history = []
     for p in to_object_traj:
-        target_tf = tf_from_orientation(p[0], p[1], p[2], 90 * DEG, 0, 180 * DEG)
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 180 * DEG, 0, 180 * DEG)
         to_object_traj_q_history.append(crp_ra.solve_ik(target_tf))
 
     # расчет положениий движения c захваченым объектом
     move_with_obj_q_history = []
     for p in move_l_with_obj:
-        target_tf = tf_from_orientation(p[0], p[1], p[2], 90 * DEG, 0, 180 * DEG)
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 180 * DEG, 0, 180 * DEG)
         move_with_obj_q_history.append(crp_ra.solve_ik(target_tf))
 
     # расчет положениий движения в точку старта
     move_home_q_history = []
     for p in move_l_home:
-        target_tf = tf_from_orientation(p[0], p[1], p[2], 90 * DEG, 0, 180 * DEG)
+        target_tf = tf_from_orientation(p[0], p[1], p[2], 180 * DEG, 0, 180 * DEG)
         move_home_q_history.append(crp_ra.solve_ik(target_tf))
 
     for coords in to_object_traj_q_history:

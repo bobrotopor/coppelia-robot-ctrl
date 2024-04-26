@@ -38,7 +38,7 @@ def get_object_coords(client_id, obj_id) -> NDArray:
 
 def get_coord_ids(client_id) -> list:
     """Получить список id обобщённых координат манипулятора."""
-    coord_ids = [0, 0, 0, 0, 0]
+    coord_ids = [0, 0, 0, 0, 0, 0, 0]
     err, coord_ids[0] = sim.simxGetObjectHandle(client_id, 'j_1', sim.simx_opmode_oneshot_wait)
     err, coord_ids[1] = sim.simxGetObjectHandle(client_id, 'j_2', sim.simx_opmode_oneshot_wait)
     err, coord_ids[2] = sim.simxGetObjectHandle(client_id, 'j_3', sim.simx_opmode_oneshot_wait)
@@ -50,7 +50,7 @@ def get_coord_ids(client_id) -> list:
 
 def get_curr_coords(client_id, coord_ids: list) -> NDArray:
     """Получить список текущих значений обобщённых координат манипулятора."""
-    coords = np.zeros(5)
+    coords = np.zeros(10)
     error, coords[0] = sim.simxGetJointPosition(client_id, coord_ids[0], sim.simx_opmode_oneshot_wait)
     error, coords[1] = sim.simxGetJointPosition(client_id, coord_ids[1], sim.simx_opmode_oneshot_wait)
     error, coords[2] = sim.simxGetJointPosition(client_id, coord_ids[2], sim.simx_opmode_oneshot_wait)
